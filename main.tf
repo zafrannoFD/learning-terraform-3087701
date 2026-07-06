@@ -30,7 +30,7 @@ resource "aws_instance" "blog" {
     dnf install -y nginx
     systemctl enable nginx
     systemctl start nginx
-  EOF
+    EOF
 
   tags = {
     Name = "HelloWorld"
