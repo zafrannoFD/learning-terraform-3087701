@@ -42,8 +42,8 @@ resource "aws_instance" "blog" {
 
   user_data = <<-EOF
     #!/bin/bash
-    dnf update -y
-    dnf install -y nginx
+    sudo dnf update -y
+    sudo dnf install -y nginx
     systemctl enable nginx
     systemctl start nginx
     EOF
