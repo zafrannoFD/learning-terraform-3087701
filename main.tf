@@ -54,33 +54,29 @@ resource "aws_instance" "blog" {
 }
 
 module "blog_sg" {
-  source  = "terraform-aws-modules/security-group/aws"
-  version = "6.0.0"
-  name    = "blog_new"
+  source = "terraform-aws-modules/security-group/aws"
 
-  vpc_id = module.blog_vpc.vpc_id
+  name        = "blog_new"
+  description = "Blog security group"
+  vpc_id      = module.blog_vpc.vpc_id
 
   ingress_rules = {
-    http = {
+    https = {
       from_port   = 80
-      to_port     = 80
       ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-      description = "HTTP"
+      cidr_ipv4   = "10.0.0.0/16"
+      description = "HTTP from internal"
     }
     https = {
       from_port   = 443
-      to_port     = 443
       ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-      description = "HTTPS"
+      cidr_ipv4   = "10.0.0.0/16"
+      description = "HTTPS from internal"
     }
-    ssh = {
-      from_port   = 22
-      to_port     = 22
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-      description = "SSH"
+    self-all = {
+      ip_protocol                  = "-1"
+      referenced_security_group_id = "self"
+      description                  = "All traffic from members of this SG"
     }
   }
 
@@ -89,6 +85,10 @@ module "blog_sg" {
       ip_protocol = "-1"
       cidr_ipv4   = "0.0.0.0/0"
     }
+  }
+
+  tags = {
+    Environment = "dev"
   }
 }
 
@@ -127,49 +127,4 @@ resource "aws_lb_target_group_attachment" "blog" {
   target_group_arn = aws_lb_target_group.blog.arn
   target_id        = aws_instance.blog.id
   port             = 80
-}
-
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.app_ami.id
-  instance_type = var.instance_type
-
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.test_sg.id]
-
-  user_data = <<-EOF
-    #!/bin/bash
-    sudo dnf update -y
-    sudo dnf install -y nginx
-    sudo systemctl enable nginx
-    sudo systemctl start nginx
-    EOF
-
-  tags = {
-    Name = "TestNginx"
-  }
-}
-
-resource "aws_security_group" "test_sg" {
-  name = "test-nginx-sg"
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 }
