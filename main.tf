@@ -44,8 +44,8 @@ resource "aws_instance" "blog" {
     #!/bin/bash
     sudo dnf update -y
     sudo dnf install -y nginx
-    systemctl enable nginx
-    systemctl start nginx
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
     EOF
 
   tags = {
@@ -74,6 +74,13 @@ module "blog_sg" {
       ip_protocol = "tcp"
       cidr_ipv4   = "0.0.0.0/0"
       description = "HTTPS"
+    }
+    ssh = {
+      from_port   = 22
+      to_port     = 22
+      ip_protocol = "tcp"
+      cidr_ipv4   = "0.0.0.0/0"
+      description = "SSH"
     }
   }
 
